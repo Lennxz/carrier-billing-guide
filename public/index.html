@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrier Billing Guide Generator - Zonos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f3ff;
+            color: #1e1b4b;
+            min-height: 100vh;
+        }
+
+        header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        header .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e1b4b;
+        }
+
+        header .badge {
+            background: #ede9fe;
+            color: #6d28d9;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 9999px;
+        }
+
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1e1b4b;
+        }
+
+        .card .subtitle {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+        }
+
+        .input-group input::placeholder {
+            color: #9ca3af;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: #ede9fe;
+            color: #6d28d9;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover { background: #ddd6fe; }
+
+        .examples {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .examples span {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .example-chip {
+            font-size: 12px;
+            color: #6d28d9;
+            background: #f5f3ff;
+            border: 1px solid #ede9fe;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .example-chip:hover { background: #ede9fe; }
+
+        /* Loading state */
+        .loading { display: none; text-align: center; padding: 40px 20px; }
+        .loading.active { display: block; }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid #ede9fe;
+            border-top-color: #7c3aed;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        /* Results */
+        .results { display: none; }
+        .results.active { display: block; }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .results-header h2 {
+            margin-bottom: 0;
+        }
+
+        .results-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .guide-content {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #374151;
+        }
+
+        .guide-content h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e1b4b;
+            margin: 24px 0 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #ede9fe;
+        }
+
+        .guide-content h1:first-child { margin-top: 0; }
+
+        .guide-content h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #4338ca;
+            margin: 20px 0 6px;
+        }
+
+        .guide-content h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e1b4b;
+            margin: 16px 0 4px;
+        }
+
+        .guide-content p { margin: 6px 0; }
+
+        .guide-content ol, .guide-content ul {
+            margin: 6px 0 6px 20px;
+        }
+
+        .guide-content li { margin: 4px 0; }
+
+        .guide-content code {
+            background: #f3f4f6;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .guide-content blockquote {
+            border-left: 3px solid #7c3aed;
+            background: #f5f3ff;
+            padding: 10px 14px;
+            margin: 10px 0;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+        }
+
+        .guide-content strong { color: #1e1b4b; }
+
+        /* Error */
+        .error {
+            display: none;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .error.active { display: block; }
+
+        /* Copied toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #1e1b4b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .input-group { flex-direction: column; }
+            .results-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Z</div>
+        <h1>Carrier Billing Guide Generator</h1>
+        <span class="badge">Onboarding Tool</span>
+    </header>
+
+    <main>
+        <div class="card">
+            <h2>Generate a Setup Guide</h2>
+            <p class="subtitle">Paste a shipping platform's help page URL to generate a guide on enabling third-party billing and adding VAT tax IDs.</p>
+            <div class="input-group">
+                <input type="url" id="urlInput" placeholder="https://support.shiphero.com/en/articles/..." />
+                <button class="btn-primary" id="generateBtn" onclick="generateGuide()">Generate Guide</button>
+            </div>
+            <div class="examples">
+                <span>Try:</span>
+                <button class="example-chip" onclick="setUrl('https://support.shiphero.com')">ShipHero</button>
+                <button class="example-chip" onclick="setUrl('https://help.shipstation.com')">ShipStation</button>
+                <button class="example-chip" onclick="setUrl('https://support.easypost.com')">EasyPost</button>
+            </div>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="card loading" id="loading">
+            <div class="spinner"></div>
+            <p id="loadingText">Fetching page content...</p>
+        </div>
+
+        <div class="card results" id="results">
+            <div class="results-header">
+                <h2>Generated Guide</h2>
+                <div class="results-actions">
+                    <button class="btn-secondary" onclick="copyMarkdown()">Copy Markdown</button>
+                    <button class="btn-primary" onclick="copyForConfluence()" style="padding: 8px 16px; font-size: 13px;">Copy for Confluence</button>
+                </div>
+            </div>
+            <div class="guide-content" id="guideContent"></div>
+        </div>
+    </main>
+
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
+        const results = document.getElementById('results');
+        const guideContent = document.getElementById('guideContent');
+        const errorEl = document.getElementById('error');
+        const toast = document.getElementById('toast');
+
+        let rawMarkdown = '';
+
+        function setUrl(url) {
+            urlInput.value = url;
+            urlInput.focus();
+        }
+
+        urlInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') generateGuide();
+        });
+
+        async function generateGuide() {
+            const url = urlInput.value.trim();
+            if (!url) {
+                showError('Please enter a URL.');
+                return;
+            }
+
+            try { new URL(url); } catch {
+                showError('Please enter a valid URL.');
+                return;
+            }
+
+            errorEl.classList.remove('active');
+            results.classList.remove('active');
+            loading.classList.add('active');
+            generateBtn.disabled = true;
+            loadingText.textContent = 'Fetching page content...';
+
+            try {
+                const timeoutId = setTimeout(() => {
+                    loadingText.textContent = 'Analyzing content with AI...';
+                }, 3000);
+
+                const resp = await fetch('/api/scrape', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url }),
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!resp.ok) {
+                    const data = await resp.json().catch(() => ({}));
+                    throw new Error(data.error || `Request failed (${resp.status})`);
+                }
+
+                const data = await resp.json();
+                rawMarkdown = data.guide;
+                guideContent.innerHTML = markdownToHtml(rawMarkdown);
+                loading.classList.remove('active');
+                results.classList.add('active');
+            } catch (err) {
+                loading.classList.remove('active');
+                showError(err.message || 'Something went wrong. Please try again.');
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
+
+        function showError(msg) {
+            errorEl.textContent = msg;
+            errorEl.classList.add('active');
+        }
+
+        function copyMarkdown() {
+            navigator.clipboard.writeText(rawMarkdown).then(() => showToast('Markdown copied!'));
+        }
+
+        function copyForConfluence() {
+            const html = guideContent.innerHTML;
+            const blob = new Blob([html], { type: 'text/html' });
+            const plainBlob = new Blob([rawMarkdown], { type: 'text/plain' });
+            navigator.clipboard.write([
+                new ClipboardItem({
+                    'text/html': blob,
+                    'text/plain': plainBlob,
+                })
+            ]).then(() => showToast('Copied for Confluence!'));
+        }
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Simple markdown to HTML converter
+        function markdownToHtml(md) {
+            let html = md
+                // Escape HTML
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                // Headers
+                .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+                .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+                .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+                // Bold and italic
+                .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                // Inline code
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                // Blockquotes
+                .replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>')
+                // Horizontal rules
+                .replace(/^---$/gm, '<hr>');
+
+            // Process lists and paragraphs
+            const lines = html.split('\n');
+            let result = '';
+            let inOl = false;
+            let inUl = false;
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const olMatch = line.match(/^\d+\.\s+(.+)$/);
+                const ulMatch = line.match(/^[-*]\s+(.+)$/);
+
+                if (olMatch) {
+                    if (!inOl) { result += '<ol>'; inOl = true; }
+                    result += `<li>${olMatch[1]}</li>`;
+                } else if (ulMatch) {
+                    if (!inUl) { result += '<ul>'; inUl = true; }
+                    result += `<li>${ulMatch[1]}</li>`;
+                } else {
+                    if (inOl) { result += '</ol>'; inOl = false; }
+                    if (inUl) { result += '</ul>'; inUl = false; }
+
+                    if (line.startsWith('<h') || line.startsWith('<blockquote') || line.startsWith('<hr')) {
+                        result += line;
+                    } else if (line.trim() === '') {
+                        result += '';
+                    } else {
+                        result += `<p>${line}</p>`;
+                    }
+                }
+            }
+            if (inOl) result += '</ol>';
+            if (inUl) result += '</ul>';
+
+            // Merge adjacent blockquotes
+            result = result.replace(/<\/blockquote><blockquote>/g, '<br>');
+
+            return result;
+        }
+    </script>
+</body>
+</html>
