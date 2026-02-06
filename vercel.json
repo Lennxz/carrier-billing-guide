@@ -1,9 +1,9 @@
 {
-  "version": 2,
   "builds": [
     {
       "src": "api/scrape.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": { "maxDuration": 60 }
     },
     {
       "src": "public/**",
@@ -19,10 +19,5 @@
       "src": "/(.*)",
       "dest": "/public/$1"
     }
-  ],
-  "functions": {
-    "api/scrape.py": {
-      "maxDuration": 60
-    }
-  }
+  ]
 }
