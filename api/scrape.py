@@ -8,18 +8,24 @@ import requests
 from bs4 import BeautifulSoup
 
 SYSTEM_PROMPT = """You are a technical writer at Zonos, a cross-border e-commerce company.
-Your job is to create clear, step-by-step guides for the onboarding team.
+Your job is to assess shipping platforms and create setup guides for the onboarding team.
 
-Given the content of a shipping platform's help/docs page, generate a guide covering:
+You must FIRST assess whether the platform supports BOTH of these capabilities:
 
-1. **Third-Party Billing for Duties & Taxes** — How to set up label creation so that duties and taxes are billed to a third-party account (the Zonos DDP account) rather than the shipper or receiver.
+1. **Third-Party Billing for Duties & Taxes ONLY** — The ability to bill duties and taxes to a separate third-party account (the Zonos DDP account) WITHOUT also billing shipping charges to that account. The platform must have a dedicated field or option for billing D&T independently from shipping. If the platform only supports billing both shipping and D&T together to a third party (no separation), this does NOT qualify.
 
-2. **Adding VAT Tax IDs** — How to add VAT/tax identification numbers in the platform so they appear on commercial invoices and customs documents.
+2. **Adding VAT/Tax IDs** — The ability to add VAT, EORI, IOSS, or other tax identification numbers so they appear on commercial invoices and customs documents.
 
-Rules:
+IMPORTANT: You must respond in one of two ways:
+
+**If EITHER capability is NOT supported**, respond with EXACTLY this JSON format and nothing else:
+{"supported": false, "platform": "<platform name>", "missing": "<brief explanation of what is not supported>"}
+
+**If BOTH capabilities ARE supported**, respond with EXACTLY this JSON format:
+{"supported": true, "platform": "<platform name>", "guide": "<full markdown guide>"}
+
+Guide rules (only if supported):
 - Write numbered step-by-step instructions.
-- If the page content clearly covers one of the topics, provide detailed steps.
-- If the page content does NOT cover one of the topics, say "Not found in this page" and suggest what to search for or where to look.
 - Use markdown formatting with # for main title, ## for sections, ### for subsections.
 - Keep instructions concise and actionable.
 - Include any relevant field names, menu paths, or settings exactly as they appear in the source.
@@ -35,7 +41,7 @@ URL: {url}
 {content}
 --- END PAGE CONTENT ---
 
-Please generate the carrier billing guide based on this content."""
+First assess if the platform supports BOTH separate D&T third-party billing AND tax IDs, then respond with the appropriate JSON format."""
 
 
 def fetch_page(url: str) -> str:
@@ -127,12 +133,33 @@ class handler(BaseHTTPRequestHandler):
 
             # Generate guide
             try:
-                guide = generate_guide(url, page_content)
+                raw = generate_guide(url, page_content)
             except anthropic.APIError as e:
                 self._send_json(502, {"error": f"AI service error: {str(e)}"})
                 return
 
-            self._send_json(200, {"guide": guide, "source_url": url})
+            # Parse the AI's JSON response
+            try:
+                result = json.loads(raw)
+            except json.JSONDecodeError:
+                # Fallback: treat raw text as a guide
+                self._send_json(200, {"guide": raw, "source_url": url, "supported": True})
+                return
+
+            if result.get("supported"):
+                self._send_json(200, {
+                    "guide": result.get("guide", ""),
+                    "source_url": url,
+                    "supported": True,
+                    "platform": result.get("platform", ""),
+                })
+            else:
+                self._send_json(200, {
+                    "supported": False,
+                    "source_url": url,
+                    "platform": result.get("platform", ""),
+                    "missing": result.get("missing", "Required features are not supported by this platform."),
+                })
 
         except json.JSONDecodeError:
             self._send_json(400, {"error": "Invalid JSON in request body"})

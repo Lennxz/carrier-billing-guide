@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ShipHero: Carrier Billing & VAT Setup Guide</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #172b4d;
+            line-height: 1.6;
+        }
+        h1 { font-size: 24px; border-bottom: 2px solid #0052cc; padding-bottom: 8px; }
+        h2 { font-size: 20px; color: #0052cc; margin-top: 32px; }
+        h3 { font-size: 16px; margin-top: 24px; }
+        ol, ul { padding-left: 24px; }
+        li { margin: 6px 0; }
+        strong { color: #172b4d; }
+        table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+        th, td { border: 1px solid #dfe1e6; padding: 8px 12px; text-align: left; }
+        th { background: #f4f5f7; font-weight: 600; }
+        .info-panel {
+            background: #deebff;
+            border-left: 4px solid #0052cc;
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .warning-panel {
+            background: #fffae6;
+            border-left: 4px solid #ff991f;
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        code { background: #f4f5f7; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+        hr { border: none; border-top: 1px solid #dfe1e6; margin: 32px 0; }
+        .copy-bar {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: #0052cc; color: white;
+            padding: 10px 20px; text-align: center;
+            font-size: 14px; font-weight: 600; z-index: 10;
+        }
+        .copy-bar button {
+            background: white; color: #0052cc; border: none;
+            padding: 6px 16px; border-radius: 4px; font-weight: 600;
+            cursor: pointer; margin-left: 12px; font-size: 14px;
+        }
+        .copy-bar button:hover { background: #f0f0f0; }
+        #content { margin-top: 50px; }
+    </style>
+</head>
+<body>
+    <div class="copy-bar">
+        Select All + Copy, then paste into Confluence
+        <button onclick="selectAndCopy()">Select All & Copy</button>
+    </div>
+
+    <div id="content">
+        <h1>ShipHero: Carrier Billing & VAT Setup Guide</h1>
+
+        <h2>Third-Party Billing for Duties & Taxes</h2>
+        <p>This section covers how to configure ShipHero so that duties and taxes are billed to a third-party account (e.g., the Zonos DDP account) rather than the shipper or receiver.</p>
+
+        <div class="info-panel">
+            <strong>Supported Carriers:</strong> UPS and FedEx only. USPS and DHL are not currently supported for third-party billing in ShipHero.
+        </div>
+
+        <h3>UPS Setup</h3>
+        <p><strong>For Duties & Taxes Only (most common for Zonos DDP):</strong></p>
+        <ol>
+            <li>Go to <strong>Shipping &gt; Carriers</strong></li>
+            <li>Click <strong>Connect Carrier</strong> &gt; select <strong>UPS</strong></li>
+            <li>Select your warehouse profile and shipping location</li>
+            <li>Enter your UPS account number</li>
+            <li>After the initial connection is made, go back and enter the Zonos DDP account number into the <strong>3rd Party Billing Number for Taxes and Duties</strong> field</li>
+            <li><strong>Do NOT</strong> enable the DDP setting at the carrier level &mdash; entering the account in the duties/taxes field handles this automatically</li>
+            <li>Click <strong>Connect</strong></li>
+        </ol>
+
+        <p><strong>For Shipping + Duties/Taxes on the Same 3rd Party Account:</strong></p>
+        <ol>
+            <li>Follow steps 1&ndash;4 above</li>
+            <li>Add the 3rd Party Billing info during the connection process</li>
+            <li><strong>Enable</strong> the DDP setting</li>
+            <li>No need to duplicate the info from the Shipping Charges fields into the Duties/Taxes fields</li>
+            <li>Click <strong>Connect</strong></li>
+        </ol>
+
+        <h3>FedEx Setup</h3>
+        <p><strong>For Duties & Taxes Only:</strong></p>
+        <ol>
+            <li>Go to <strong>Shipping &gt; Carriers</strong></li>
+            <li>Click <strong>Connect Carrier</strong> &gt; select <strong>FedEx</strong></li>
+            <li>Select your profile and warehouse</li>
+            <li>Enter your FedEx <strong>Account Number</strong> and <strong>Meter Number</strong></li>
+            <li>Enter the Zonos DDP account number into the <strong>Third Party Billing Number for Taxes and Duties</strong> field</li>
+            <li>Click <strong>Connect</strong></li>
+        </ol>
+
+        <p><strong>For Shipping + Duties/Taxes on the Same Account:</strong></p>
+        <ol>
+            <li>Follow steps 1&ndash;4 above</li>
+            <li>Add the 3rd Party Billing info to <strong>both</strong> the Shipping and Duties/Taxes fields</li>
+            <li>Click <strong>Connect</strong></li>
+        </ol>
+
+        <div class="warning-panel">
+            <strong>Important:</strong> When a third-party billing account is added to the duties and taxes field, DDP is automatically applied to orders assigned that carrier profile.
+        </div>
+
+        <hr>
+
+        <h2>Adding VAT Tax IDs</h2>
+        <p>ShipHero uses <strong>Automation Rules</strong> to attach tax registration numbers (VAT, EORI, IOSS) to international orders.</p>
+
+        <h3>Setting Up VAT via Automation Rules</h3>
+        <ol>
+            <li>Navigate to <code>app.shiphero.com</code> &gt; <strong>Orders</strong> &gt; <strong>Automation Rules</strong></li>
+            <li>Click the <strong>+</strong> button to create a new rule</li>
+            <li>Under <strong>Trigger</strong>, select:
+                <ul>
+                    <li><strong>Country</strong> &gt; <strong>In List</strong> &gt; select the relevant countries</li>
+                    <li>For EU: select EU member countries</li>
+                    <li>For UK: select from GB, England, Northern Ireland, NIR, Wales, Scotland, UK</li>
+                </ul>
+            </li>
+            <li>Under <strong>Action</strong>, select:
+                <ul>
+                    <li><strong>Set Order Tax Registration</strong></li>
+                    <li><strong>Tax Type</strong>: choose from the dropdown (VAT, EORI, IOSS, etc.)</li>
+                    <li><strong>Tax ID</strong>: enter your tax identification number</li>
+                </ul>
+            </li>
+            <li>Save the rule</li>
+        </ol>
+
+        <h3>Tax ID Types</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>When to Use</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>VAT</strong></td>
+                    <td>Required for doing business in the UK and EU countries. You may need separate VAT numbers per country.</td>
+                </tr>
+                <tr>
+                    <td><strong>EORI</strong></td>
+                    <td>Used by customs to monitor and track shipments into/out of the EU.</td>
+                </tr>
+                <tr>
+                    <td><strong>IOSS</strong></td>
+                    <td>Import One Stop Shop number &mdash; for paying VAT on imports into the EU valued under EUR 150.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Notes</h3>
+        <ul>
+            <li>For <strong>3PL accounts</strong>, automation rules must be set up on the <strong>child account</strong>, not the parent</li>
+            <li>The appropriate Tax ID depends on: where goods ship from, the destination country, and what goods you sell</li>
+            <li>Each shipment to Europe requires tax registration info to be attached</li>
+        </ul>
+    </div>
+
+    <script>
+        function selectAndCopy() {
+            const content = document.getElementById('content');
+            const range = document.createRange();
+            range.selectNodeContents(content);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.execCommand('copy');
+            const btn = document.querySelector('.copy-bar button');
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = 'Select All & Copy'; }, 2000);
+        }
+    </script>
+</body>
+</html>

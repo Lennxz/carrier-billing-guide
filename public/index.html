@@ -270,6 +270,40 @@
 
         .error.active { display: block; }
 
+        /* Not supported */
+        .not-supported {
+            display: none;
+            margin-bottom: 24px;
+        }
+
+        .not-supported.active { display: block; }
+
+        .not-supported-inner {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            padding: 20px 24px;
+        }
+
+        .not-supported-inner h3 {
+            color: #92400e;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .not-supported-inner p {
+            color: #78350f;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .not-supported-inner .platform-name {
+            font-weight: 600;
+        }
+
         /* Copied toast */
         .toast {
             position: fixed;
@@ -324,6 +358,13 @@
 
         <div class="error" id="error"></div>
 
+        <div class="not-supported" id="notSupported">
+            <div class="not-supported-inner">
+                <h3>Guide Not Available</h3>
+                <p id="notSupportedMsg"></p>
+            </div>
+        </div>
+
         <div class="card loading" id="loading">
             <div class="spinner"></div>
             <p id="loadingText">Fetching page content...</p>
@@ -351,6 +392,8 @@
         const results = document.getElementById('results');
         const guideContent = document.getElementById('guideContent');
         const errorEl = document.getElementById('error');
+        const notSupported = document.getElementById('notSupported');
+        const notSupportedMsg = document.getElementById('notSupportedMsg');
         const toast = document.getElementById('toast');
 
         let rawMarkdown = '';
@@ -378,6 +421,7 @@
 
             errorEl.classList.remove('active');
             results.classList.remove('active');
+            notSupported.classList.remove('active');
             loading.classList.add('active');
             generateBtn.disabled = true;
             loadingText.textContent = 'Fetching page content...';
@@ -401,10 +445,17 @@
                 }
 
                 const data = await resp.json();
-                rawMarkdown = data.guide;
-                guideContent.innerHTML = markdownToHtml(rawMarkdown);
                 loading.classList.remove('active');
-                results.classList.add('active');
+
+                if (data.supported === false) {
+                    const platform = data.platform || 'This platform';
+                    notSupportedMsg.innerHTML = '<span class="platform-name">' + platform + '</span> does not support the required features for a carrier billing guide. ' + (data.missing || '');
+                    notSupported.classList.add('active');
+                } else {
+                    rawMarkdown = data.guide;
+                    guideContent.innerHTML = markdownToHtml(rawMarkdown);
+                    results.classList.add('active');
+                }
             } catch (err) {
                 loading.classList.remove('active');
                 showError(err.message || 'Something went wrong. Please try again.');
