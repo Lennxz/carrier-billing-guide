@@ -6,4 +6,5 @@ dependencies = [
     "anthropic",
     "requests",
     "beautifulsoup4",
+    "scrapingbee",
 ]
